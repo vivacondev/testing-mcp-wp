@@ -1,0 +1,352 @@
+/* ============================================================
+   Claude for WP — Admin styles
+   ============================================================ */
+
+:root {
+    --cfw-bg:        #f0f0f1;
+    --cfw-surface:   #ffffff;
+    --cfw-border:    #dcdcde;
+    --cfw-accent:    #d97757;
+    --cfw-accent-dk: #b85f3f;
+    --cfw-text:      #1e1e1e;
+    --cfw-muted:     #646970;
+    --cfw-radius:    8px;
+    --cfw-shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+}
+
+/* Layout ---------------------------------------------------- */
+.cfw-wrap {
+    max-width: 860px;
+    margin-top: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.cfw-header {
+    margin-bottom: 20px;
+}
+
+.cfw-header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--cfw-text);
+    margin: 0 0 4px;
+}
+
+.cfw-header p {
+    color: var(--cfw-muted);
+    margin: 0;
+    font-size: .9rem;
+}
+
+/* Card ------------------------------------------------------ */
+.cfw-card {
+    background: var(--cfw-surface);
+    border: 1px solid var(--cfw-border);
+    border-radius: var(--cfw-radius);
+    padding: 20px 24px;
+    box-shadow: var(--cfw-shadow);
+    margin-bottom: 20px;
+}
+
+/* Fields ---------------------------------------------------- */
+.cfw-field {
+    margin-bottom: 16px;
+}
+
+.cfw-field label {
+    display: block;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--cfw-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+}
+
+.cfw-field--row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* Inputs ---------------------------------------------------- */
+.cfw-input,
+.cfw-select,
+.cfw-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--cfw-border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: .9rem;
+    color: var(--cfw-text);
+    background: #fafafa;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.cfw-input:focus,
+.cfw-select:focus,
+.cfw-textarea:focus {
+    outline: none;
+    border-color: var(--cfw-accent);
+    box-shadow: 0 0 0 2px rgba(217,119,87,.18);
+    background: #fff;
+}
+
+.cfw-input--wide { max-width: 420px; }
+
+.cfw-textarea {
+    resize: vertical;
+    min-height: 90px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.cfw-textarea--code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: .82rem;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-color: #313244;
+    min-height: 280px;
+}
+
+.cfw-textarea--output {
+    background: #f8f8f8;
+    min-height: 220px;
+}
+
+.cfw-help {
+    margin: 5px 0 0;
+    font-size: .8rem;
+    color: var(--cfw-muted);
+}
+
+.cfw-help a { color: var(--cfw-accent); }
+
+/* Buttons ---------------------------------------------------- */
+.cfw-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    font-size: .875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+}
+
+.cfw-btn--primary {
+    background: var(--cfw-accent);
+    color: #fff;
+    border-color: var(--cfw-accent-dk);
+}
+
+.cfw-btn--primary:hover { background: var(--cfw-accent-dk); }
+
+.cfw-btn--secondary {
+    background: #fff;
+    color: var(--cfw-text);
+    border-color: var(--cfw-border);
+}
+
+.cfw-btn--secondary:hover { background: var(--cfw-bg); }
+
+.cfw-btn--sm {
+    padding: 5px 12px;
+    font-size: .8rem;
+    background: #fff;
+    border-color: var(--cfw-border);
+    color: var(--cfw-text);
+}
+
+.cfw-btn--sm:hover { background: var(--cfw-bg); }
+
+.cfw-btn:disabled { opacity: .5; pointer-events: none; }
+
+/* Chat ------------------------------------------------------ */
+.cfw-chat-window {
+    background: var(--cfw-surface);
+    border: 1px solid var(--cfw-border);
+    border-radius: var(--cfw-radius);
+    padding: 20px;
+    min-height: 360px;
+    max-height: 520px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 12px;
+    box-shadow: var(--cfw-shadow);
+}
+
+.cfw-message {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.cfw-message--user {
+    flex-direction: row-reverse;
+}
+
+.cfw-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--cfw-accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+    flex-shrink: 0;
+}
+
+.cfw-message--user .cfw-avatar {
+    background: #3858e9;
+}
+
+.cfw-bubble {
+    background: #f3f4f6;
+    border-radius: 12px 12px 12px 4px;
+    padding: 10px 14px;
+    max-width: 78%;
+    font-size: .875rem;
+    line-height: 1.6;
+    color: var(--cfw-text);
+    word-break: break-word;
+}
+
+.cfw-message--user .cfw-bubble {
+    background: #3858e9;
+    color: #fff;
+    border-radius: 12px 12px 4px 12px;
+}
+
+.cfw-bubble pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: .78rem;
+    overflow-x: auto;
+    margin: 8px 0 0;
+}
+
+.cfw-bubble code {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    background: rgba(0,0,0,.08);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: .82em;
+}
+
+.cfw-message--user .cfw-bubble code {
+    background: rgba(255,255,255,.2);
+}
+
+.cfw-typing .cfw-bubble::after {
+    content: '▋';
+    animation: cfw-blink .8s step-end infinite;
+}
+
+@keyframes cfw-blink {
+    50% { opacity: 0; }
+}
+
+.cfw-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.cfw-input-row .cfw-textarea {
+    flex: 1;
+    min-height: 70px;
+}
+
+/* Result block ---------------------------------------------- */
+.cfw-result-block {
+    background: var(--cfw-surface);
+    border: 1px solid var(--cfw-border);
+    border-radius: var(--cfw-radius);
+    box-shadow: var(--cfw-shadow);
+    overflow: hidden;
+}
+
+.cfw-result-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--cfw-border);
+    background: #fafafa;
+}
+
+.cfw-result-label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--cfw-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.cfw-result-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.cfw-result-block .cfw-textarea {
+    border: none;
+    border-radius: 0;
+    background: #f8f8f8;
+}
+
+/* Tabs ------------------------------------------------------ */
+.cfw-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--cfw-border);
+    background: #fafafa;
+}
+
+.cfw-tab {
+    padding: 9px 18px;
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--cfw-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color .15s;
+}
+
+.cfw-tab--active {
+    color: var(--cfw-accent);
+    border-bottom-color: var(--cfw-accent);
+}
+
+.cfw-tab-panel { display: block; }
+
+/* Preview frame --------------------------------------------- */
+.cfw-preview-frame {
+    width: 100%;
+    height: 480px;
+    border: none;
+    background: #fff;
+    display: block;
+}
+
+/* Notifications --------------------------------------------- */
+.cfw-notice {
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: .875rem;
+    margin-top: 12px;
+}
+
+.cfw-notice--success { background: #edfaef; color: #276749; border: 1px solid #b2dfb8; }
+.cfw-notice--error   { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
