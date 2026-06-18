@@ -29,22 +29,50 @@ class CFW_Ajax {
     }
 
     // -------------------------------------------------------------------------
-    // Chat
+    // Chat — uses Tool Use loop
     // -------------------------------------------------------------------------
 
     public static function cfw_chat(): void {
         self::verify();
 
         $message = sanitize_textarea_field( $_POST['message'] ?? '' );
+        $history = json_decode( stripslashes( $_POST['history'] ?? '[]' ), true );
+
         if ( empty( $message ) ) {
             wp_send_json_error( 'Mensaje vacío.' );
         }
 
-        $system = 'Eres un asistente experto en WordPress, Elementor y desarrollo web. '
-            . 'Responde siempre en español. Sé conciso y práctico. '
-            . 'Cuando des código, usa bloques de código con el lenguaje correspondiente.';
+        if ( ! is_array( $history ) ) $history = [];
 
-        self::respond( CFW_Api::send( $message, $system, 2048 ) );
+        $system = 'Eres un asistente experto en WordPress integrado directamente en el panel de administración. '
+            . 'Tienes acceso a herramientas que te permiten leer y modificar este sitio WordPress en tiempo real. '
+            . 'Cuando el usuario te pida hacer algo en WordPress (crear posts, listar contenido, cambiar opciones, etc.), '
+            . 'usa las herramientas disponibles para ejecutarlo directamente — no expliques cómo hacerlo manualmente. '
+            . 'Después de ejecutar una acción, confirma qué hiciste con un resumen claro. '
+            . 'Si necesitas información del sitio antes de actuar, consúltala primero con get_site_info o get_posts. '
+            . 'Responde siempre en español. Sé conciso y directo.';
+
+        // Build messages array from history + new message
+        $messages = [];
+        foreach ( $history as $entry ) {
+            $role    = sanitize_text_field( $entry['role'] ?? '' );
+            $content = sanitize_textarea_field( $entry['content'] ?? '' );
+            if ( in_array( $role, [ 'user', 'assistant' ], true ) && ! empty( $content ) ) {
+                $messages[] = [ 'role' => $role, 'content' => $content ];
+            }
+        }
+        $messages[] = [ 'role' => 'user', 'content' => $message ];
+
+        $result = CFW_Api::send_with_tools( $messages, $system, 4096 );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error( $result->get_error_message() );
+        }
+
+        wp_send_json_success([
+            'text'    => $result['text'],
+            'actions' => $result['actions'],
+        ]);
     }
 
     // -------------------------------------------------------------------------
@@ -63,15 +91,16 @@ class CFW_Ajax {
         }
 
         $system_map = [
-            'generate' => "Eres un redactor web experto. Genera contenido en HTML semántico (usa <h2>, <p>, <ul>, etc.). Tono: $tone. Responde solo con el contenido, sin explicaciones.",
-            'improve'  => "Eres un editor experto. Mejora el siguiente contenido manteniendo la esencia pero mejorando claridad, fluidez y estructura. Tono: $tone. Devuelve solo el contenido mejorado en HTML.",
-            'seo'      => "Eres un experto SEO. Dado el contenido o tema, genera: 1 título SEO optimizado (máx 60 chars) y 1 meta descripción (máx 155 chars). Formato: TÍTULO: ...\nMETA: ...",
-            'excerpt'  => "Eres un redactor experto. Genera un extracto atractivo de 2-3 frases para el siguiente contenido. Solo el extracto, sin comillas ni explicaciones.",
+            'generate' => "Eres un redactor web. Tu única tarea es generar el contenido solicitado en HTML semántico (usa <h2>, <p>, <ul>, etc.). Tono: $tone. IMPORTANTE: devuelve ÚNICAMENTE el contenido HTML, sin introducción, sin disclaimers, sin explicaciones, sin bloques de código markdown. Solo el HTML del contenido.",
+            'improve'  => "Eres un editor experto. Mejora el contenido que recibes manteniendo la esencia pero mejorando claridad, fluidez y estructura. Tono: $tone. Devuelve ÚNICAMENTE el contenido mejorado en HTML, sin ningún texto adicional.",
+            'seo'      => "Eres un experto SEO. Genera exactamente esto y nada más:\nTÍTULO: [título SEO optimizado, máx 60 caracteres]\nMETA: [meta descripción, máx 155 caracteres]",
+            'excerpt'  => "Genera un extracto de 2-3 frases para el contenido recibido. Devuelve ÚNICAMENTE el extracto, sin comillas, sin explicaciones, sin nada más.",
         ];
 
         $system = $system_map[ $mode ] ?? $system_map['generate'];
 
-        self::respond( CFW_Api::send( $prompt, $system, 3000 ) );
+        $task_context = "TAREA: generar contenido para un post de WordPress.\n\nINSTRUCCIÓN DEL USUARIO: $prompt";
+        self::respond( CFW_Api::send( $task_context, $system, 3000 ) );
     }
 
     // -------------------------------------------------------------------------
@@ -96,8 +125,8 @@ class CFW_Ajax {
             'custom'       => '',
         ];
 
-        $base = $type !== 'custom' ? $type_labels[ $type ] : '';
-        $full_desc = trim( "$base. $desc" );
+        $base       = $type !== 'custom' ? $type_labels[ $type ] : '';
+        $full_desc  = trim( "$base. $desc" );
         $color_note = $colors ? "Paleta de colores: $colors." : '';
 
         $user_message = "Crea un bloque HTML+CSS para: $full_desc. $color_note Estilo visual: $style. "

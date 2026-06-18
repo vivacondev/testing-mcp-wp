@@ -22,7 +22,7 @@
     }
 
     function showNotice(parent, msg, type = 'success') {
-        const el = parent.querySelector('.cfw-notice') || document.createElement('div');
+        const el = document.createElement('div');
         el.className = `cfw-notice cfw-notice--${type}`;
         el.textContent = msg;
         parent.appendChild(el);
@@ -38,6 +38,20 @@
             .replace(/\n/g, '<br>');
     }
 
+    const ACTION_LABELS = {
+        get_posts:          '📄 Consultando posts',
+        create_post:        '✏️ Creando post',
+        update_post:        '💾 Actualizando post',
+        delete_post:        '🗑️ Eliminando post',
+        get_terms:          '🏷️ Consultando términos',
+        create_term:        '🏷️ Creando término',
+        get_site_info:      '🌐 Leyendo info del sitio',
+        update_site_option: '⚙️ Actualizando opción del sitio',
+        get_users:          '👥 Consultando usuarios',
+        get_plugins:        '🔌 Consultando plugins',
+        get_media:          '🖼️ Consultando medios',
+    };
+
     // -------------------------------------------------------------------------
     // Chat
     // -------------------------------------------------------------------------
@@ -46,8 +60,11 @@
     const chatInput  = document.getElementById('cfw-chat-input');
     const chatSend   = document.getElementById('cfw-chat-send');
 
+    // Conversation history for context (only text turns)
+    const chatHistory = [];
+
     if (chatSend) {
-        function appendMessage(text, role) {
+        function appendMessage(content, role) {
             const wrap = document.createElement('div');
             wrap.className = `cfw-message cfw-message--${role}`;
 
@@ -58,9 +75,9 @@
             const bubble = document.createElement('div');
             bubble.className = 'cfw-bubble';
             if (role === 'assistant') {
-                bubble.innerHTML = renderMarkdown(text);
+                bubble.innerHTML = renderMarkdown(content);
             } else {
-                bubble.textContent = text;
+                bubble.textContent = content;
             }
 
             wrap.appendChild(avatar);
@@ -68,6 +85,26 @@
             chatWindow.appendChild(wrap);
             chatWindow.scrollTop = chatWindow.scrollHeight;
             return bubble;
+        }
+
+        function appendActions(actions) {
+            if (!actions || actions.length === 0) return;
+
+            const wrap = document.createElement('div');
+            wrap.className = 'cfw-actions-log';
+
+            actions.forEach(action => {
+                const item = document.createElement('div');
+                item.className = 'cfw-action-item';
+                const label = ACTION_LABELS[action.tool] || `🔧 ${action.tool}`;
+                const success = !action.result?.error;
+                item.innerHTML = `<span class="cfw-action-icon">${success ? '✓' : '✗'}</span> ${label}`;
+                if (!success) item.classList.add('cfw-action-item--error');
+                wrap.appendChild(item);
+            });
+
+            chatWindow.appendChild(wrap);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
         async function sendChat() {
@@ -81,16 +118,31 @@
             // Typing indicator
             const typingWrap = document.createElement('div');
             typingWrap.className = 'cfw-message cfw-message--assistant cfw-typing';
-            typingWrap.innerHTML = '<span class="cfw-avatar">✦</span><div class="cfw-bubble">Escribiendo</div>';
+            typingWrap.innerHTML = '<span class="cfw-avatar">✦</span><div class="cfw-bubble">Pensando</div>';
             chatWindow.appendChild(typingWrap);
             chatWindow.scrollTop = chatWindow.scrollHeight;
 
-            const res = await post('cfw_chat', { message: msg });
+            const res = await post('cfw_chat', {
+                message: msg,
+                history: JSON.stringify(chatHistory),
+            });
+
             typingWrap.remove();
             setLoading(chatSend, false);
 
             if (res.success) {
+                // Show tool actions taken
+                appendActions(res.data.actions);
+
+                // Show response
                 appendMessage(res.data.text, 'assistant');
+
+                // Update history with text-only turns
+                chatHistory.push({ role: 'user', content: msg });
+                chatHistory.push({ role: 'assistant', content: res.data.text });
+
+                // Keep history manageable (last 20 turns)
+                if (chatHistory.length > 20) chatHistory.splice(0, 2);
             } else {
                 appendMessage('⚠️ Error: ' + res.data, 'assistant');
             }
@@ -134,13 +186,11 @@
             }
         });
 
-        // Copy
         document.getElementById('cfw-content-copy')?.addEventListener('click', () => {
             navigator.clipboard.writeText(contentOutput.value);
             showNotice(contentResult, 'Copiado al portapapeles.');
         });
 
-        // Create post
         document.getElementById('cfw-content-new-post')?.addEventListener('click', async () => {
             const content = contentOutput.value.trim();
             if (!content) return;
@@ -206,7 +256,6 @@
             showNotice(elResult, 'Código copiado al portapapeles.');
         });
 
-        // Tabs
         document.querySelectorAll('.cfw-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.cfw-tab').forEach(t => t.classList.remove('cfw-tab--active'));
