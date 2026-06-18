@@ -1,0 +1,303 @@
+/* ============================================================
+   Claude for WP — Floating widget
+   ============================================================ */
+
+:root {
+    --cfw-accent:    #d97757;
+    --cfw-accent-dk: #b85f3f;
+    --cfw-dark:      #1e1e1e;
+    --cfw-muted:     #646970;
+    --cfw-border:    #dcdcde;
+    --cfw-surface:   #ffffff;
+    --cfw-radius:    12px;
+}
+
+/* ── Container ───────────────────────────────────────────── */
+.cfw-widget {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    z-index: 999999;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ── Toggle button ───────────────────────────────────────── */
+.cfw-widget__toggle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--cfw-accent);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(217,119,87,.45);
+    transition: background .2s, transform .2s, box-shadow .2s;
+    margin-left: auto;
+}
+
+.cfw-widget__toggle:hover {
+    background: var(--cfw-accent-dk);
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(217,119,87,.55);
+}
+
+.cfw-widget--open .cfw-widget__toggle {
+    background: var(--cfw-dark);
+    box-shadow: 0 4px 16px rgba(0,0,0,.25);
+}
+
+/* ── Panel ───────────────────────────────────────────────── */
+.cfw-widget__panel {
+    position: absolute;
+    bottom: 64px;
+    right: 0;
+    width: 380px;
+    max-height: 560px;
+    background: var(--cfw-surface);
+    border: 1px solid var(--cfw-border);
+    border-radius: var(--cfw-radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: cfw-slide-up .2s ease;
+}
+
+@keyframes cfw-slide-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.cfw-widget__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    background: var(--cfw-accent);
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.cfw-widget__title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: .9rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+}
+
+.cfw-widget__title-icon {
+    font-size: 1rem;
+}
+
+.cfw-widget__header-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.cfw-widget__action-btn {
+    background: rgba(255,255,255,.2);
+    border: none;
+    color: #fff;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s;
+}
+
+.cfw-widget__action-btn:hover {
+    background: rgba(255,255,255,.35);
+}
+
+/* ── Messages ────────────────────────────────────────────── */
+.cfw-widget__messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+}
+
+.cfw-widget__msg {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.cfw-widget__msg--user {
+    flex-direction: row-reverse;
+}
+
+.cfw-widget__avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--cfw-accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    flex-shrink: 0;
+}
+
+.cfw-widget__msg--user .cfw-widget__avatar {
+    background: #3858e9;
+    font-size: .7rem;
+}
+
+.cfw-widget__bubble {
+    background: #f3f4f6;
+    border-radius: 10px 10px 10px 3px;
+    padding: 8px 12px;
+    max-width: 82%;
+    font-size: .825rem;
+    line-height: 1.55;
+    color: var(--cfw-dark);
+    word-break: break-word;
+}
+
+.cfw-widget__msg--user .cfw-widget__bubble {
+    background: #3858e9;
+    color: #fff;
+    border-radius: 10px 10px 3px 10px;
+}
+
+.cfw-widget__bubble pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 5px;
+    padding: 8px;
+    font-size: .72rem;
+    overflow-x: auto;
+    margin: 6px 0 0;
+    white-space: pre-wrap;
+}
+
+.cfw-widget__bubble code {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    background: rgba(0,0,0,.08);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: .8em;
+}
+
+.cfw-widget__msg--user .cfw-widget__bubble code {
+    background: rgba(255,255,255,.2);
+}
+
+/* Typing indicator */
+.cfw-widget__typing .cfw-widget__bubble {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 10px 14px;
+}
+
+.cfw-widget__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cfw-muted);
+    animation: cfw-bounce .9s ease-in-out infinite;
+}
+
+.cfw-widget__dot:nth-child(2) { animation-delay: .15s; }
+.cfw-widget__dot:nth-child(3) { animation-delay: .3s; }
+
+@keyframes cfw-bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30%           { transform: translateY(-5px); }
+}
+
+/* Actions log */
+.cfw-widget__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 0 4px 36px;
+}
+
+.cfw-widget__action-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: .7rem;
+    font-weight: 500;
+}
+
+.cfw-widget__action-pill--error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+}
+
+/* ── Input area ──────────────────────────────────────────── */
+.cfw-widget__input-area {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    padding: 10px 12px;
+    border-top: 1px solid var(--cfw-border);
+    background: #fafafa;
+    flex-shrink: 0;
+}
+
+.cfw-widget__input {
+    flex: 1;
+    border: 1px solid var(--cfw-border);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: .825rem;
+    font-family: inherit;
+    line-height: 1.4;
+    resize: none;
+    background: #fff;
+    color: var(--cfw-dark);
+    transition: border-color .15s;
+    min-height: 36px;
+    max-height: 100px;
+}
+
+.cfw-widget__input:focus {
+    outline: none;
+    border-color: var(--cfw-accent);
+    box-shadow: 0 0 0 2px rgba(217,119,87,.15);
+}
+
+.cfw-widget__send {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: var(--cfw-accent);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .9rem;
+    flex-shrink: 0;
+    transition: background .15s;
+}
+
+.cfw-widget__send:hover    { background: var(--cfw-accent-dk); }
+.cfw-widget__send:disabled { opacity: .5; pointer-events: none; }
