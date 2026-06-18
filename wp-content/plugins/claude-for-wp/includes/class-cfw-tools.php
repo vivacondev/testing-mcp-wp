@@ -25,7 +25,6 @@ class CFW_Tools {
                         'search'      => [ 'type' => 'string',  'description' => 'Texto a buscar en título o contenido.' ],
                         'limit'       => [ 'type' => 'integer', 'description' => 'Número máximo de resultados. Por defecto: 10.' ],
                     ],
-                    'required' => [],
                 ],
             ],
 
@@ -85,7 +84,6 @@ class CFW_Tools {
                         'taxonomy' => [ 'type' => 'string', 'description' => 'Taxonomía: category, post_tag u otra. Por defecto: category.' ],
                         'search'   => [ 'type' => 'string', 'description' => 'Texto a buscar en el nombre.' ],
                     ],
-                    'required' => [],
                 ],
             ],
 
@@ -110,8 +108,7 @@ class CFW_Tools {
                 'description' => 'Obtiene información general del sitio: nombre, descripción, URL, tema activo, plugins activos, versión de WordPress.',
                 'input_schema' => [
                     'type'       => 'object',
-                    'properties' => [],
-                    'required'   => [],
+                    'properties' => (object) [],
                 ],
             ],
 
@@ -139,7 +136,6 @@ class CFW_Tools {
                         'search' => [ 'type' => 'string',  'description' => 'Buscar por nombre o email.' ],
                         'limit'  => [ 'type' => 'integer', 'description' => 'Número máximo de resultados. Por defecto: 20.' ],
                     ],
-                    'required' => [],
                 ],
             ],
 
@@ -149,8 +145,7 @@ class CFW_Tools {
                 'description' => 'Lista los plugins instalados con su estado (activo/inactivo) y versión.',
                 'input_schema' => [
                     'type'       => 'object',
-                    'properties' => [],
-                    'required'   => [],
+                    'properties' => (object) [],
                 ],
             ],
 
@@ -165,7 +160,6 @@ class CFW_Tools {
                         'mime_type' => [ 'type' => 'string',  'description' => 'Filtrar por tipo: image, video, audio, application.' ],
                         'limit'     => [ 'type' => 'integer', 'description' => 'Número máximo de resultados. Por defecto: 20.' ],
                     ],
-                    'required' => [],
                 ],
             ],
         ];
