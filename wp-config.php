@@ -17,7 +17,7 @@ define('NONCE_SALT',       '&54#t^-cdLG!*Ch.<J92>aT|T=HT6T|k=3V/old|hQN$y 1z(<HM
 
 $table_prefix = 'wp_';
 
-define( 'WP_DEBUG', false );
+define( 'WP_DEBUG', true );
 
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', __DIR__ . '/' );
