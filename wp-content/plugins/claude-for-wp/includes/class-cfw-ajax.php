@@ -50,7 +50,13 @@ class CFW_Ajax {
             . 'usa las herramientas disponibles para ejecutarlo directamente — no expliques cómo hacerlo manualmente. '
             . 'Después de ejecutar una acción, confirma qué hiciste con un resumen claro. '
             . 'Si necesitas información del sitio antes de actuar, consúltala primero con get_site_info o get_posts. '
-            . 'Responde siempre en español. Sé conciso y directo.';
+            . 'Responde siempre en español. Sé conciso y directo. '
+            . 'ELEMENTOR: cuando el usuario pida crear una página con Elementor, landing page, o página con secciones visuales, '
+            . 'usa la tool create_elementor_page. Estructura el contenido en secciones lógicas con columnas apropiadas. '
+            . 'Widgets disponibles: heading (títulos), text-editor (párrafos), button (botones CTA), image (imágenes), '
+            . 'spacer (espacio vertical), divider (línea separadora), icon-box (icono+título+texto), image-box (imagen+título+texto), video (YouTube/Vimeo). '
+            . 'Para icon-box usa iconos de Font Awesome, ej: fas fa-star, fas fa-check, fas fa-rocket, fas fa-heart. '
+            . 'Siempre devuelve el enlace de edición en Elementor tras crear la página.';
 
         // Build messages array from history + new message
         $messages = [];

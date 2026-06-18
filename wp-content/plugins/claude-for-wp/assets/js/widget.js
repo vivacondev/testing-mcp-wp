@@ -14,6 +14,7 @@
         get_users:          '👥 Consultando usuarios',
         get_plugins:        '🔌 Consultando plugins',
         get_media:          '🖼️ Consultando medios',
+        create_elementor_page: '🎨 Creando página Elementor',
     };
 
     const STORAGE_KEY = 'cfw_widget_history';

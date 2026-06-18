@@ -162,6 +162,62 @@ class CFW_Tools {
                     ],
                 ],
             ],
+
+            // ── Elementor ─────────────────────────────────────────────────────
+            [
+                'name'        => 'create_elementor_page',
+                'description' => 'Crea una página de WordPress con layout de Elementor usando widgets nativos básicos. '
+                    . 'Soporta: heading, text, button, image, spacer, divider, icon-box, image-box, video. '
+                    . 'Organiza los widgets en secciones con columnas. '
+                    . 'Úsalo cuando el usuario pida crear una página con Elementor, una landing page, o una página con estructura visual.',
+                'input_schema' => [
+                    'type'       => 'object',
+                    'properties' => [
+                        'title'       => [ 'type' => 'string', 'description' => 'Título de la página.' ],
+                        'post_status' => [ 'type' => 'string', 'description' => 'Estado: draft o publish. Por defecto: draft.' ],
+                        'sections'    => [
+                            'type'        => 'array',
+                            'description' => 'Array de secciones. Cada sección contiene columnas y cada columna contiene widgets.',
+                            'items'       => [
+                                'type'       => 'object',
+                                'properties' => [
+                                    'bg_color' => [ 'type' => 'string', 'description' => 'Color de fondo de la sección en hex, ej: #1a1a2e. Opcional.' ],
+                                    'padding'  => [ 'type' => 'string', 'description' => 'Padding vertical en px, ej: 80. Opcional.' ],
+                                    'columns'  => [
+                                        'type'  => 'array',
+                                        'description' => 'Columnas de la sección. 1 columna = full width, 2 columnas = mitad/mitad, etc.',
+                                        'items' => [
+                                            'type'       => 'object',
+                                            'properties' => [
+                                                'width'   => [ 'type' => 'number', 'description' => 'Ancho de la columna en porcentaje, ej: 50, 33.33, 100. Por defecto: 100.' ],
+                                                'widgets' => [
+                                                    'type'  => 'array',
+                                                    'description' => 'Widgets de esta columna.',
+                                                    'items' => [
+                                                        'type'       => 'object',
+                                                        'properties' => [
+                                                            'type' => [
+                                                                'type' => 'string',
+                                                                'description' => 'Tipo de widget: heading, text, button, image, spacer, divider, icon-box, image-box, video.',
+                                                            ],
+                                                            'settings' => [
+                                                                'type'        => 'object',
+                                                                'description' => 'Configuración del widget. Varía según el tipo. Ver documentación de cada tipo.',
+                                                            ],
+                                                        ],
+                                                        'required' => [ 'type', 'settings' ],
+                                                    ],
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    'required' => [ 'title', 'sections' ],
+                ],
+            ],
         ];
     }
 
@@ -188,6 +244,7 @@ class CFW_Tools {
                 'get_users'          => self::tool_get_users( $input ),
                 'get_plugins'        => self::tool_get_plugins(),
                 'get_media'          => self::tool_get_media( $input ),
+                'create_elementor_page' => self::tool_create_elementor_page( $input ),
             };
         } catch ( \Throwable $e ) {
             return [ 'error' => $e->getMessage() ];
@@ -470,4 +527,231 @@ class CFW_Tools {
             ], $items ),
         ];
     }
+    // =========================================================================
+    // Elementor page builder
+    // =========================================================================
+
+    private static function tool_create_elementor_page( array $in ): array {
+        $title   = sanitize_text_field( $in['title'] ?? 'Nueva página' );
+        $status  = sanitize_text_field( $in['post_status'] ?? 'draft' );
+        $sections_input = $in['sections'] ?? [];
+
+        // Create the WP post first
+        $post_id = wp_insert_post([
+            'post_title'  => $title,
+            'post_type'   => 'page',
+            'post_status' => $status,
+            'post_content' => '',
+        ], true );
+
+        if ( is_wp_error( $post_id ) ) {
+            return [ 'error' => $post_id->get_error_message() ];
+        }
+
+        // Build Elementor JSON
+        $elementor_data = self::build_elementor_data( $sections_input );
+
+        // Save Elementor meta
+        update_post_meta( $post_id, '_elementor_data', wp_slash( wp_json_encode( $elementor_data ) ) );
+        update_post_meta( $post_id, '_elementor_edit_mode', 'builder' );
+        update_post_meta( $post_id, '_elementor_template_type', 'wp-page' );
+        update_post_meta( $post_id, '_elementor_version', '3.0.0' );
+
+        return [
+            'success'       => true,
+            'post_id'       => $post_id,
+            'title'         => $title,
+            'status'        => $status,
+            'sections'      => count( $elementor_data ),
+            'edit_url'      => admin_url( "post.php?post={$post_id}&action=elementor" ),
+            'preview_url'   => get_permalink( $post_id ),
+        ];
+    }
+
+    // ── Elementor data builder ────────────────────────────────────────────────
+
+    private static function build_elementor_data( array $sections_input ): array {
+        $sections = [];
+
+        foreach ( $sections_input as $section_input ) {
+            $columns_input = $section_input['columns'] ?? [];
+            if ( empty( $columns_input ) ) continue;
+
+            $section_id = self::el_id();
+            $columns    = [];
+
+            foreach ( $columns_input as $col_input ) {
+                $col_id  = self::el_id();
+                $width   = (float) ( $col_input['width'] ?? ( 100 / count( $columns_input ) ) );
+                $widgets = [];
+
+                foreach ( $col_input['widgets'] ?? [] as $w ) {
+                    $widget = self::build_widget( $w['type'] ?? 'text', $w['settings'] ?? [] );
+                    if ( $widget ) $widgets[] = $widget;
+                }
+
+                $columns[] = [
+                    'id'       => $col_id,
+                    'elType'   => 'column',
+                    'settings' => [
+                        '_column_size' => (int) round( $width ),
+                        '_inline_size' => $width,
+                    ],
+                    'elements' => $widgets,
+                    'isInner'  => false,
+                ];
+            }
+
+            // Section settings
+            $section_settings = [ 'layout' => 'boxed' ];
+
+            if ( ! empty( $section_input['bg_color'] ) ) {
+                $section_settings['background_background'] = 'classic';
+                $section_settings['background_color']      = sanitize_hex_color( $section_input['bg_color'] );
+            }
+
+            if ( ! empty( $section_input['padding'] ) ) {
+                $px = (int) $section_input['padding'];
+                $section_settings['padding'] = [
+                    'top'    => (string) $px, 'right'  => '0',
+                    'bottom' => (string) $px, 'left'   => '0',
+                    'unit'   => 'px', 'isLinked' => false,
+                ];
+            }
+
+            $sections[] = [
+                'id'       => $section_id,
+                'elType'   => 'section',
+                'settings' => $section_settings,
+                'elements' => $columns,
+                'isInner'  => false,
+            ];
+        }
+
+        return $sections;
+    }
+
+    // ── Widget factory ────────────────────────────────────────────────────────
+
+    private static function build_widget( string $type, array $s ): ?array {
+        $id = self::el_id();
+
+        $widget = [
+            'id'         => $id,
+            'elType'     => 'widget',
+            'widgetType' => $type,
+            'settings'   => [],
+            'elements'   => [],
+        ];
+
+        switch ( $type ) {
+
+            case 'heading':
+                $widget['settings'] = [
+                    'title'       => sanitize_text_field( $s['title'] ?? 'Título' ),
+                    'header_size' => sanitize_text_field( $s['tag'] ?? 'h2' ),
+                    'align'       => sanitize_text_field( $s['align'] ?? 'left' ),
+                    'title_color' => sanitize_hex_color( $s['color'] ?? '' ),
+                    'typography_typography' => 'custom',
+                    'typography_font_size'  => empty( $s['font_size'] ) ? [] : [ 'size' => (int) $s['font_size'], 'unit' => 'px' ],
+                ];
+                break;
+
+            case 'text':
+            case 'text-editor':
+                $widget['widgetType'] = 'text-editor';
+                $widget['settings']   = [
+                    'editor' => wp_kses_post( $s['content'] ?? $s['text'] ?? '' ),
+                    'align'  => sanitize_text_field( $s['align'] ?? 'left' ),
+                ];
+                break;
+
+            case 'button':
+                $widget['settings'] = [
+                    'text'         => sanitize_text_field( $s['text'] ?? 'Haz clic aquí' ),
+                    'link'         => [ 'url' => esc_url_raw( $s['url'] ?? '#' ), 'is_external' => false, 'nofollow' => false ],
+                    'align'        => sanitize_text_field( $s['align'] ?? 'center' ),
+                    'button_type'  => 'default',
+                    'size'         => sanitize_text_field( $s['size'] ?? 'md' ),
+                    'background_color' => sanitize_hex_color( $s['bg_color'] ?? '' ),
+                    'button_text_color' => sanitize_hex_color( $s['text_color'] ?? '' ),
+                ];
+                break;
+
+            case 'image':
+                $image_id  = (int) ( $s['image_id'] ?? 0 );
+                $image_url = $image_id ? wp_get_attachment_url( $image_id ) : esc_url_raw( $s['url'] ?? '' );
+                $widget['settings'] = [
+                    'image'   => [ 'id' => $image_id, 'url' => $image_url ],
+                    'caption' => sanitize_text_field( $s['caption'] ?? '' ),
+                    'align'   => sanitize_text_field( $s['align'] ?? 'center' ),
+                    'width'   => [ 'size' => (int) ( $s['width'] ?? 100 ), 'unit' => '%' ],
+                    'link_to' => 'none',
+                ];
+                break;
+
+            case 'spacer':
+                $widget['settings'] = [
+                    'space' => [ 'size' => (int) ( $s['height'] ?? 50 ), 'unit' => 'px' ],
+                ];
+                break;
+
+            case 'divider':
+                $widget['settings'] = [
+                    'style'  => sanitize_text_field( $s['style'] ?? 'solid' ),
+                    'color'  => sanitize_hex_color( $s['color'] ?? '#e0e0e0' ),
+                    'weight' => [ 'size' => (int) ( $s['weight'] ?? 1 ), 'unit' => 'px' ],
+                    'width'  => [ 'size' => (int) ( $s['width'] ?? 100 ), 'unit' => '%' ],
+                    'align'  => sanitize_text_field( $s['align'] ?? 'center' ),
+                    'gap'    => [ 'size' => 15, 'unit' => 'px' ],
+                ];
+                break;
+
+            case 'icon-box':
+                $widget['settings'] = [
+                    'icon'         => [ 'value' => sanitize_text_field( $s['icon'] ?? 'fas fa-star' ), 'library' => 'fa-solid' ],
+                    'title_text'   => sanitize_text_field( $s['title'] ?? 'Título' ),
+                    'description_text' => sanitize_textarea_field( $s['description'] ?? '' ),
+                    'position'     => sanitize_text_field( $s['position'] ?? 'top' ),
+                    'title_size'   => 'h3',
+                ];
+                break;
+
+            case 'image-box':
+                $image_id  = (int) ( $s['image_id'] ?? 0 );
+                $image_url = $image_id ? wp_get_attachment_url( $image_id ) : esc_url_raw( $s['url'] ?? '' );
+                $widget['settings'] = [
+                    'image'            => [ 'id' => $image_id, 'url' => $image_url ],
+                    'title_text'       => sanitize_text_field( $s['title'] ?? 'Título' ),
+                    'description_text' => sanitize_textarea_field( $s['description'] ?? '' ),
+                    'position'         => sanitize_text_field( $s['position'] ?? 'top' ),
+                    'title_size'       => 'h3',
+                    'image_size'       => 'medium',
+                ];
+                break;
+
+            case 'video':
+                $widget['settings'] = [
+                    'video_type'  => sanitize_text_field( $s['provider'] ?? 'youtube' ),
+                    'youtube_url' => esc_url_raw( $s['url'] ?? '' ),
+                    'vimeo_url'   => esc_url_raw( $s['vimeo_url'] ?? '' ),
+                    'autoplay'    => false,
+                    'mute'        => false,
+                    'aspect_ratio'=> '169',
+                ];
+                break;
+
+            default:
+                return null;
+        }
+
+        return $widget;
+    }
+
+    // ── Helper: generate Elementor-style random ID ────────────────────────────
+
+    private static function el_id(): string {
+        return substr( md5( uniqid( '', true ) ), 0, 7 );
+    }
+
 }
